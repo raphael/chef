@@ -44,18 +44,7 @@ class Chef
       @node = node
       @collection = collection
     end
-    
-    def build_provider(resource)
-      provider_klass = resource.provider
-      if provider_klass == nil
-        provider_klass = Chef::Platform.find_provider_for_node(@node, resource)      
-      end
-      Chef::Log.debug("#{resource} using #{provider_klass.to_s}")
-      provider = provider_klass.new(@node, resource)
-      provider.load_current_resource
-      provider
-    end
-    
+     
     def converge
 
       delayed_actions = Hash.new
@@ -83,14 +72,13 @@ class Chef
           # Walk the actions for this resource, building the provider and running each.
           action_list = resource.action.kind_of?(Array) ? resource.action : [ resource.action ]
           action_list.each do |ra|
-            provider = build_provider(resource)
-            provider.send("action_#{ra}")
+            resource.run_action(ra, @node)
             if resource.updated
               resource.actions.each_key do |action|
                 if resource.actions[action].has_key?(:immediate)
                   resource.actions[action][:immediate].each do |r|
                     Chef::Log.info("#{resource} sending #{action} action to #{r} (immediate)")
-                    build_provider(r).send("action_#{action}")
+                    r.run_action(action, @node)
                   end
                 end
                 if resource.actions[action].has_key?(:delayed)
@@ -115,7 +103,7 @@ class Chef
       delayed_actions.each do |resource, action_hash| 
         action_hash.each do |action, log_array|
           log_array.each { |l| l.call } # Call each log message
-          build_provider(resource).send("action_#{action}") 
+          resource.run_action(action, @node)
         end
       end
 

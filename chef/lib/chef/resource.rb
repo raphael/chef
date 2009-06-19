@@ -218,9 +218,12 @@ class Chef
       @not_if
     end
     
-    def run_action(action)
-      provider_class = Chef::Platform.find_provider_for_node(@node, self)
-      provider = provider_class.new(@node, self)
+    def run_action(action, n=node)
+      if (provider_klass=provider) == nil
+        provider_klass = Chef::Platform.find_provider_for_node(n, self)
+      end
+      Chef::Log.debug("#{self} using #{provider_klass.to_s}")
+      provider = provider_klass.new(n, self)
       provider.load_current_resource
       provider.send("action_#{action}")
     end
