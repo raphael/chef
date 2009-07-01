@@ -1,7 +1,8 @@
 #
-# Author:: Adam Jacob (<adam@opscode.com>)
-# Copyright:: Copyright (c) 2008 Opscode, Inc.
-# License:: Apache License, Version 2.0
+# Cookbook Name:: recipe_include
+# Recipe:: default
+#
+# Copyright 2009, Opscode
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,18 +17,5 @@
 # limitations under the License.
 #
 
-require 'chef/resource/script'
+include_recipe "recipe_include::second"
 
-class Chef
-  class Resource
-    class Ruby < Chef::Resource::Script
-        
-      def initialize(name, collection=nil, node=nil)
-        super(name, collection, node)
-        @resource_name = :ruby
-        @interpreter = "ruby"
-      end
-
-    end
-  end
-end

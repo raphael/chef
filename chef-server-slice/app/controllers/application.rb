@@ -61,7 +61,7 @@ class ChefServerSlice::Application < Merb::Controller
     end
     arg.gsub(/\./, '_')
   end
-  
+
   def login_required
     if session[:openid]
       return session[:openid]
