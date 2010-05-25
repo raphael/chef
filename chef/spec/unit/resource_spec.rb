@@ -24,7 +24,8 @@ end
 
 describe Chef::Resource do
   before(:each) do
-    @resource = Chef::Resource.new("funk")
+    @node = Hash.new()
+    @resource = Chef::Resource.new("funk", nil, @node)
   end
   
   describe "initialize" do
@@ -54,6 +55,35 @@ describe Chef::Resource do
       @resource.action.should_not == @prior_resource.action
     end
   end
+  
+  describe "load_prior_resource_from_node" do
+    before(:each) do
+      @persisted_resource = Chef::Resource.new("funk", nil, @node)
+      @persisted_resource.supports(:funky => true)
+      @persisted_resource.source_line
+      @persisted_resource.allowed_actions << :funkytown
+      @persisted_resource.action(:funkytown)
+      @persisted_resource.provider Chef::Provider::Easy 
+      @persisted_resource.store_to_node
+      
+      @resource.action(:nothing)
+    end
+    
+    it "should load the allowed_actions of a prior resource" do
+      @resource.load_prior_resource
+      @resource.allowed_actions.should == [:nothing, :funkytown]
+    end
+    
+    it "should load the supports hash of a prior resource" do
+      @resource.load_prior_resource
+      @resource.supports.should == { :funky => true }
+    end
+    
+    it "should not inherit the action from the prior resource" do
+      @resource.load_prior_resource
+      @resource.action.should_not == @persisted_resource.action
+    end
+  end
 
   describe "name" do
     it "should have a name" do
@@ -79,6 +109,14 @@ describe Chef::Resource do
       lambda { @resource.noop true }.should_not raise_error(ArgumentError)
       lambda { @resource.noop false }.should_not raise_error(ArgumentError)
       lambda { @resource.noop "eat it" }.should raise_error(ArgumentError)
+    end
+  end
+  
+  describe "persist" do
+    it "should accept true or false for persist" do
+      lambda { @resource.persist true }.should_not raise_error(ArgumentError)
+      lambda { @resource.persist false }.should_not raise_error(ArgumentError)
+      lambda { @resource.persist "eat it" }.should raise_error(ArgumentError)
     end
   end
   
@@ -144,6 +182,13 @@ describe Chef::Resource do
     it "should become a string like resource_name[name]" do
       zm = Chef::Resource::ZenMaster.new("coffee")
       zm.to_s.should eql("zen_master[coffee]")
+    end
+  end
+  
+  describe "to_sym" do 
+    it "should become a symbol like :resource_name_name" do
+      zm = Chef::Resource::ZenMaster.new("coffee")
+      zm.to_sym.should eql(:zen_master_coffee)
     end
   end
   

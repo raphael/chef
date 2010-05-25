@@ -113,6 +113,9 @@ class Chef
           action_list.each do |ra|
             run_action(resource, ra)
           end
+          
+          resource.store_to_node if resource.persist
+          
         rescue => e
           Chef::Log.error("#{resource} (#{resource.source_line}) had an error:\n#{e}\n#{e.backtrace.join("\n")}")
           raise e unless resource.ignore_failure
